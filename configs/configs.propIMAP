@@ -1,0 +1,6 @@
+#Sun Feb 12 00:39:43 BRT 2023
+config.cbCaptcha=false
+config.name=2Captcha
+config.pos=0
+config.token=
+config.useCaptcha=true
