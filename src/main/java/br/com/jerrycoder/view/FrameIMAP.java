@@ -6,11 +6,7 @@ package br.com.jerrycoder.view;
 
 import br.com.jerrycoder.Requests.PingProxy;
 import br.com.jerrycoder.model.SettingsTemplate;
-import com.google.common.collect.Lists;
-import com.jgoodies.looks.plastic.PlasticLookAndFeel;
-import com.jgoodies.looks.plastic.theme.DarkStar;
 import br.com.jerrycoder.core.ConectionIMAP;
-import br.com.jerrycoder.Requests.Requests;
 import java.applet.Applet;
 import java.awt.SystemColor;
 import java.io.BufferedReader;
@@ -39,7 +35,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.DefaultTableModel;
 import br.com.jerrycoder.model.DadosLogin;
-import br.com.jerrycoder.model.Proxy;
 import br.com.jerrycoder.model.ResponseConection;
 
 /**
@@ -68,7 +63,6 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private int salvarRetestar = 5;
     private List<String> listaLogin = new ArrayList<String>();
     private List<String> listaProxy = new ArrayList<String>();
-    private boolean start;
     private ExecutorService executor;
     private static final Object lockLive = new Object();
     private static final Object lockDie = new Object();
@@ -81,10 +75,14 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private Object o = new Object();
     private volatile boolean suspended = false;
     private Properties prop;
-    private Properties propProxyList;
     private Properties configsProxy;
     private Properties configsValidacoes;
-    private int limite;
+    private int validaPosProxy;
+
+    DefaultTableModel valLive;
+    DefaultTableModel valDie;
+    DefaultTableModel valRetrie;
+    DefaultTableModel valToCheck;
 
     /**
      * Creates new form BurguerKing2
@@ -106,7 +104,11 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         setPropriedadesValidacoes();
 
         totalThreads = jBots.getValue();
-        limite = 0;
+
+        valLive = (DefaultTableModel) tableLive.getModel();
+        valDie = (DefaultTableModel) tableDie.getModel();
+        valRetrie = (DefaultTableModel) tableRetrie.getModel();
+        valToCheck = (DefaultTableModel) tableToCheck.getModel();
 
     }
 
@@ -1680,16 +1682,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                 zerarContadores();
                 resume();
 
-                //Divide a lista no total te threads
-                int div = (int) Math.round(((double) totalList / totalThreads) + 0.5d);
-
-                //Separa a lista pela qtd de boots
-                List<List<String>> smallerLists = Lists.partition(listaLogin, div);
-
-                int totalBots = smallerLists.size();
-
                 //Inicia pools de threads
-                executor = Executors.newFixedThreadPool(totalBots);
+                executor = Executors.newFixedThreadPool(totalThreads);
 
                 atualizarContadores();
 
@@ -1697,11 +1691,133 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
                 jProgressBar.setMaximum(totalList);
 
-                for (int i = 0; i < totalBots; i++) {
+                for (int i = 0; i < totalThreads; i++) {
                     //Cria a rotina
-
+                    int numThread = i;
                     valStatus.addRow(new String[]{String.valueOf(i + 1), null, null});
-                    executor.execute(new Rotina(i, smallerLists.get(i)));
+
+                    //Inicia novas Threads baseado no laço For
+                    executor.submit(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            ResponseConection responseCon = new ResponseConection();
+
+                            while (!Thread.currentThread().isInterrupted()) {
+
+                                SettingsTemplate settingsTemplate = new SettingsTemplate();
+
+                                if (listaLogin.size() >= 1) {
+                                    String linha = "";
+
+                                    if (responseCon.getCodResponse() != 2) {
+                                        synchronized (listaLogin) {
+                                            linha = listaLogin.get(0);
+                                            System.out.println("thread " + numThread + " " + linha);
+                                            listaLogin.remove(0);
+                                        }
+                                    }
+
+                                    
+                                    String[] arrayLinha = linha.split(":");
+
+                                    //Set dados na table de dados sendo testados
+                                    valStatus.setValueAt(linha, numThread, 1);
+                                    valStatus.setValueAt("Start", numThread, 2);
+
+                                    settingsTemplate.setUseProxy(cbUseProxy.isSelected());
+
+                                    if (cbUseProxy.isSelected()) {
+                                        String proxyLinha = getProxy(validaPosProxy);
+                                        settingsTemplate.setValueProxyList(proxyLinha);
+                                    }
+
+                                    //Set configs ports
+                                    settingsTemplate.setPortEmail1(cbPorta1.isSelected());
+                                    settingsTemplate.setPortEmail2(cbPorta2.isSelected());
+                                    settingsTemplate.setPortEmail3(cbPorta3.isSelected());
+
+                                    //Set configs servers
+                                    settingsTemplate.setServerEmail2(cbServer1.isSelected());
+                                    settingsTemplate.setServerEmail3(cbServer2.isSelected());
+                                    settingsTemplate.setServerEmail1(cbServer3.isSelected());
+                                    settingsTemplate.setServerEmail4(cbServer4.isSelected());
+
+                                    //Set port and server do front-end
+                                    settingsTemplate.setPortText1(cbPorta1.getText());
+                                    settingsTemplate.setPortText2(cbPorta2.getText());
+                                    settingsTemplate.setPortText3(cbPorta3.getText());
+
+                                    //Altera nome host para o servidor do email
+                                    String server = arrayLinha[0].split("@")[1];
+                                    settingsTemplate.setServerText1(cbServer1.getText().replace("host", server));
+                                    settingsTemplate.setServerText2(cbServer2.getText().replace("host", server));
+                                    settingsTemplate.setServerText3(cbServer3.getText().replace("host", server));
+                                    settingsTemplate.setServerText4(cbServer4.getText().replace("host", server));
+
+                                    //Verificar servidores MX
+                                    settingsTemplate.setVerifyMx(cbMX.isSelected());
+
+                                    //Verificar formato email
+                                    settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
+
+                                    DadosLogin dadosLogin = new DadosLogin();
+                                    dadosLogin.setUsername(arrayLinha[0]);
+                                    dadosLogin.setPass(arrayLinha[1]);
+                                    dadosLogin.setProtocoloType("imap");
+
+                                    ConectionIMAP con = new ConectionIMAP();
+                                    responseCon = con.conectar(dadosLogin, settingsTemplate);
+
+                                    switch (responseCon.getCodResponse()) {
+                                        case 0:
+                        synchronized (lockLive) {
+                                                valLive.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), dadosLogin.getServer(), dadosLogin.getPort(), dadosLogin.getProtocoloType(), responseCon.getStatusResponse()});
+                                                valStatus.setValueAt("Live", numThread, 2);
+                                                atualizaLives(dadosLogin.toString(), responseCon.getStatusResponse());
+                                            }
+                                            break;
+                                        case 1:
+                        synchronized (lockDie) {
+                                                valDie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                valStatus.setValueAt("Die", numThread, 2);
+                                                atualizaDies(dadosLogin.toString(), responseCon.getStatusResponse());
+                                            }
+                                            break;
+                                        case 2:
+                        synchronized (lockRetrie) {
+                                                valRetrie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                valStatus.setValueAt("Retrie", numThread, 2);
+                                                atualizaRetries();
+                                            }
+
+                                            break;
+                                        case 3:
+                        synchronized (lockToCheck) {
+                                                valToCheck.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                valStatus.setValueAt("ToCheck", numThread, 2);
+                                                atualizaToCheck(dadosLogin.toString(), responseCon.getStatusResponse());
+                                            }
+
+                                            break;
+
+                                    }
+
+                                    validaPosProxy++;
+
+                                } else {
+                                    Thread.currentThread().interrupt();
+                                    valStatus.setValueAt("", numThread, 1);
+                                    valStatus.setValueAt("Finish", numThread, 2);
+                                    break;
+
+                                }
+
+                            }
+
+                        }
+                    });
+
                 }
 
                 executor.shutdown();
@@ -1724,6 +1840,79 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
         }
     }//GEN-LAST:event_btStartActionPerformed
+
+    private String getProxy(int posLista) {
+        String retorno = "";
+        if (posLista < listaProxy.size()) {
+            retorno = listaProxy.get(posLista);
+        } else {
+            validaPosProxy = 0;
+            retorno = listaProxy.get(0);
+        }
+
+        return retorno;
+
+    }
+
+    private void atualizaTestado() {
+        totalTestado++;
+        jProgressBar.setValue(totalTestado);
+    }
+
+    private void atualizaLives(String str, String str2) {
+        atualizaTestado();
+        totalLive++;
+
+        try {
+            new File("./Resultados/" + titleForm + "/").mkdirs();
+            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
+            out.println(str);
+            out.close();
+            out.flush();
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
+        }
+    }
+
+    private void atualizaDies(String str, String str2) {
+        atualizaTestado();
+        totalDie++;
+
+        try {
+            new File("./Resultados/" + titleForm + "/").mkdirs();
+            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
+            out.println(str);
+            out.close();
+            out.flush();
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
+        }
+
+    }
+
+    private void atualizaRetries() {
+        totalRetrie++;
+    }
+
+    private void atualizaToCheck(String str, String str2) {
+        atualizaTestado();
+        totalToCheck++;
+
+        try {
+
+            new File("./Resultados/" + titleForm + "/").mkdirs();
+            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
+            out.println(str);
+            out.close();
+            out.flush();
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
+        }
+
+    }
 
     private void btStartMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btStartMouseExited
         // TODO add your handling code here:
@@ -1878,277 +2067,6 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JLabel txtToCheck;
     private javax.swing.JLabel txtTotalList;
     // End of variables declaration//GEN-END:variables
-public class Rotina implements Runnable {
 
-        List<String> listaLoginDiv = new ArrayList<String>();
-        int numThread;
-        int validaPosProxy;
-
-        private Rotina(int num, List<String> list) {
-            listaLoginDiv = list;
-            numThread = num;
-
-        }
-
-        @Override
-        public void run() {
-
-            DefaultTableModel valLive = (DefaultTableModel) tableLive.getModel();
-            DefaultTableModel valDie = (DefaultTableModel) tableDie.getModel();
-            DefaultTableModel valRetrie = (DefaultTableModel) tableRetrie.getModel();
-            DefaultTableModel valToCheck = (DefaultTableModel) tableToCheck.getModel();
-
-            for (int i = 0; i < listaLoginDiv.size(); i++) {
-
-                if (salvarRetestar == 0) {
-                    String linha = listaLoginDiv.get(i);
-
-                    //    System.out.println("linha: " + linha);
-                    valStatus = (DefaultTableModel) tableStatus.getModel();
-                    valStatus.setValueAt(linha, numThread, 1);
-                    valStatus.setValueAt("Salvando linhas", numThread, 2);
-
-                    synchronized (lockToCheck) {
-                        atualizaToCheck(linha, "Retestar");
-                        valStatus.setValueAt("Live", numThread, 2);
-                    }
-
-                } else {
-                    if (!suspended) {
-                        //  System.out.println("numThread: " + numThread + " : " + listaLoginDiv.get(i));
-
-                        SettingsTemplate settingsTemplate = new SettingsTemplate();
-                        String linha = listaLoginDiv.get(i);
-
-                        valStatus = (DefaultTableModel) tableStatus.getModel();
-
-                        valStatus.setValueAt(linha, numThread, 1);
-                        valStatus.setValueAt("Start", numThread, 2);
-
-                        if (!linha.contains(":")) {
-                            //FORMATO INCORRETO
-                            synchronized (lockDie) {
-                                valDie.addRow(new String[]{linha, null, "Formato incorreto"});
-                                valStatus.setValueAt("Die", numThread, 2);
-                                atualizaDies(linha, "Formato incorreto");
-                            }
-                        } else {
-
-                            String[] arrayLinha = linha.split(":");
-
-                            if (arrayLinha.length < 2) {
-                                synchronized (lockDie) {
-                                    valDie.addRow(new String[]{linha, null, "Formato incorreto"});
-                                    valStatus.setValueAt("Die", numThread, 2);
-                                    atualizaDies(linha, "Formato incorreto");
-                                }
-                            } else {
-
-                                if (!arrayLinha[0].contains("@")) {
-                                    synchronized (lockDie) {
-                                        valDie.addRow(new String[]{linha, null, "Formato email incorreto"});
-                                        valStatus.setValueAt("Die", numThread, 2);
-                                        atualizaDies(linha, "Formato incorreto");
-                                    }
-                                } else {
-
-                                    settingsTemplate.setUseProxy(cbUseProxy.isSelected());
-                                    //       settingsTemplate.setUseProxyAPI(rdProxyAPI.isSelected());
-                                    //       settingsTemplate.setUseProxyList(rdProxyList.isSelected());
-
-                                    if (cbUseProxy.isSelected()) {
-                                        String proxyLinha = getProxy(validaPosProxy);
-                                        settingsTemplate.setValueProxyList(proxyLinha);
-                                    }
-
-                                    /*
-                                    if (rdProxyAPI.isSelected()) {
-                                        settingsTemplate.setValueProxyAPI(txtProxyAPI.getText());
-                                        settingsTemplate.setRestartProxy(cbRestartProxy.isSelected());
-                                        settingsTemplate.setValueLinkRestart(txtLinkRestart.getText());
-                                    }
-
-                                    //Verificar se será usado proxy em lista e seta o proxy por posição do array
-                                    if (rdProxyList.isSelected()) {
-                                        String proxyLinha = getProxy(validaPosProxy);
-                                        settingsTemplate.setValueProxyList(proxyLinha);
-                                    }
-                                    
-                                     */
-                                    //Set configs ports
-                                    settingsTemplate.setPortEmail1(cbPorta1.isSelected());
-                                    settingsTemplate.setPortEmail2(cbPorta2.isSelected());
-                                    settingsTemplate.setPortEmail3(cbPorta3.isSelected());
-
-                                    //Set configs servers
-                                    settingsTemplate.setServerEmail2(cbServer1.isSelected());
-                                    settingsTemplate.setServerEmail3(cbServer2.isSelected());
-                                    settingsTemplate.setServerEmail1(cbServer3.isSelected());
-                                    settingsTemplate.setServerEmail4(cbServer4.isSelected());
-
-                                    //Set port and server do front-end
-                                    settingsTemplate.setPortText1(cbPorta1.getText());
-                                    settingsTemplate.setPortText2(cbPorta2.getText());
-                                    settingsTemplate.setPortText3(cbPorta3.getText());
-
-                                    //Altera nome host para o servidor do email
-                                    String server = arrayLinha[0].split("@")[1];
-                                    settingsTemplate.setServerText1(cbServer1.getText().replace("host", server));
-                                    settingsTemplate.setServerText2(cbServer2.getText().replace("host", server));
-                                    settingsTemplate.setServerText3(cbServer3.getText().replace("host", server));
-                                    settingsTemplate.setServerText4(cbServer4.getText().replace("host", server));
-
-                                    //Verificar servidores MX
-                                    settingsTemplate.setVerifyMx(cbMX.isSelected());
-
-                                    //Verificar formato email
-                                    settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
-
-                                    DadosLogin dadosLogin = new DadosLogin();
-                                    dadosLogin.setUsername(arrayLinha[0]);
-                                    dadosLogin.setPass(arrayLinha[1]);
-                                    dadosLogin.setProtocoloType("imap");
-
-                                    ConectionIMAP con = new ConectionIMAP();
-                                    ResponseConection responseCon = con.conectar(dadosLogin, settingsTemplate);
-
-                                    switch (responseCon.getCodResponse()) {
-                                        case 0:
-                        synchronized (lockLive) {
-                                                valLive.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), dadosLogin.getServer(), dadosLogin.getPort(), dadosLogin.getProtocoloType(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("Live", numThread, 2);
-                                                atualizaLives(dadosLogin.toString(), responseCon.getStatusResponse());
-                                            }
-                                            break;
-                                        case 1:
-                        synchronized (lockDie) {
-                                                valDie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("Die", numThread, 2);
-                                                atualizaDies(dadosLogin.toString(), responseCon.getStatusResponse());
-                                            }
-                                            break;
-                                        case 2:
-                        synchronized (lockRetrie) {
-                                                i--;
-                                                valRetrie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("Retrie", numThread, 2);
-                                                atualizaRetries();
-                                            }
-
-                                            break;
-                                        case 3:
-                        synchronized (lockToCheck) {
-                                                valToCheck.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("ToCheck", numThread, 2);
-                                                atualizaToCheck(dadosLogin.toString(), responseCon.getStatusResponse());
-                                            }
-
-                                            break;
-
-                                    }
-
-                                    validaPosProxy++;
-                                }
-                            }
-                        }
-
-                    } else {
-
-                        try {
-                            valStatus.setValueAt("Paused", numThread, 2);
-                            while (suspended) {
-
-                                synchronized (o) {
-                                    o.wait();
-                                }
-                            }
-                            i--;
-                        } catch (InterruptedException e) {
-                        }
-
-                    }
-                }
-
-            }
-
-            valStatus.setValueAt("", numThread, 1);
-            valStatus.setValueAt("Finish", numThread, 2);
-
-        }
-
-        private String getProxy(int posLista) {
-            String retorno = "";
-            if (posLista < listaProxy.size()) {
-                retorno = listaProxy.get(posLista);
-            } else {
-                validaPosProxy = 0;
-                retorno = listaProxy.get(0);
-            }
-
-            return retorno;
-
-        }
-
-        private void atualizaTestado() {
-            totalTestado++;
-            jProgressBar.setValue(totalTestado);
-        }
-
-        private void atualizaLives(String str, String str2) {
-            atualizaTestado();
-            totalLive++;
-
-            try {
-                new File("./Resultados/" + titleForm + "/").mkdirs();
-                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
-                out.println(str);
-                out.close();
-                out.flush();
-
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
-            }
-        }
-
-        private void atualizaDies(String str, String str2) {
-            atualizaTestado();
-            totalDie++;
-
-            try {
-                new File("./Resultados/" + titleForm + "/").mkdirs();
-                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
-                out.println(str);
-                out.close();
-                out.flush();
-
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
-            }
-
-        }
-
-        private void atualizaRetries() {
-            totalRetrie++;
-        }
-
-        private void atualizaToCheck(String str, String str2) {
-            atualizaTestado();
-            totalToCheck++;
-
-            try {
-
-                new File("./Resultados/" + titleForm + "/").mkdirs();
-                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("./Resultados/" + titleForm + "/" + str2 + ".txt", true)));
-                out.println(str);
-                out.close();
-                out.flush();
-
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Erro ao salvar login: " + ex);
-            }
-
-        }
-
-    }
 
 }
