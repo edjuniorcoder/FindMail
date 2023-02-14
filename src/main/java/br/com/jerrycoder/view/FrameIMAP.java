@@ -1701,10 +1701,9 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                         @Override
                         public void run() {
 
-                            ResponseConection responseCon = new ResponseConection();
-
                             while (!Thread.currentThread().isInterrupted()) {
 
+                                ResponseConection responseCon = new ResponseConection();
                                 SettingsTemplate settingsTemplate = new SettingsTemplate();
 
                                 if (listaLogin.size() >= 1) {
@@ -1718,7 +1717,6 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                                         }
                                     }
 
-                                    
                                     String[] arrayLinha = linha.split(":");
 
                                     //Set dados na table de dados sendo testados
@@ -2067,6 +2065,5 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JLabel txtToCheck;
     private javax.swing.JLabel txtTotalList;
     // End of variables declaration//GEN-END:variables
-
 
 }

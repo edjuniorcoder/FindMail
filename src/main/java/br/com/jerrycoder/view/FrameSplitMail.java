@@ -1702,10 +1702,7 @@ public class FrameSplitMail extends javax.swing.JInternalFrame {
 
         if (listaLogin.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Add List!");
-        } /*else if (txtIdCaptcha.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Configure a API 2Captcha atráves do menu Settings");
-
-        }*/ else {
+        } else {
             if (btStart.getText().equals("START")) {
 
                 btStart.setText("PAUSE");
@@ -2157,6 +2154,5 @@ public class FrameSplitMail extends javax.swing.JInternalFrame {
     private javax.swing.JLabel txtToCheck;
     private javax.swing.JLabel txtTotalList;
     // End of variables declaration//GEN-END:variables
-
 
 }
