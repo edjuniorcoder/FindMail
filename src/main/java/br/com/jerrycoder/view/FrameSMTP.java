@@ -4,14 +4,14 @@
  */
 package br.com.jerrycoder.view;
 
-import br.com.jerrycoder.Requests.PingProxy;
-import br.com.jerrycoder.model.SettingsTemplate;
+import br.com.jerrycoder.model.bo.PingProxy;
+import br.com.jerrycoder.model.vo.SettingsTemplate;
 import com.google.common.collect.Lists;
 import com.jgoodies.looks.plastic.PlasticLookAndFeel;
 import com.jgoodies.looks.plastic.theme.DarkStar;
-import br.com.jerrycoder.core.ConectionIMAP;
-import br.com.jerrycoder.Requests.Requests;
-import br.com.jerrycoder.core.ConectionSMTP;
+import br.com.jerrycoder.model.bo.ConectionIMAP;
+import br.com.jerrycoder.model.bo.Requests;
+import br.com.jerrycoder.model.bo.ConectionSMTP;
 import java.applet.Applet;
 import java.awt.SystemColor;
 import java.io.BufferedReader;
@@ -39,9 +39,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.DefaultTableModel;
-import br.com.jerrycoder.model.DadosLogin;
-import br.com.jerrycoder.model.Proxy;
-import br.com.jerrycoder.model.ResponseConection;
+import br.com.jerrycoder.model.vo.User;
+import br.com.jerrycoder.model.vo.Proxy;
+import br.com.jerrycoder.model.vo.ResponseConection;
 
 /**
  *
@@ -1779,7 +1779,7 @@ public class FrameSMTP extends javax.swing.JInternalFrame {
                                     //Verificar formato email
                                     settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
 
-                                    DadosLogin dadosLogin = new DadosLogin();
+                                    User dadosLogin = new User();
                                     dadosLogin.setUsername(arrayLinha[0]);
                                     dadosLogin.setPass(arrayLinha[1]);
                                     dadosLogin.setProtocoloType("imap");

@@ -35,7 +35,7 @@ public class FunctionsStrings {
         return rdn.nextInt((max - min) + 1) + min;
     }
 
-    public String getString(String texto, String inicio, String fim) {
+    public static String getString(String texto, String inicio, String fim) {
 
         String response = texto.substring(texto.indexOf(inicio), texto.lastIndexOf(fim));
         response = response.replace(inicio, "");

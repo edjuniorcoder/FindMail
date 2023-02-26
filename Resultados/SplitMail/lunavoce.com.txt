@@ -1,0 +1,1 @@
+extra@lunavoce.com:konijn:mail.lunavoce.com:993:imap

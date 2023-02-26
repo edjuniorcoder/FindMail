@@ -4,11 +4,11 @@
  */
 package br.com.jerrycoder.view;
 
-import br.com.jerrycoder.Requests.PingProxy;
-import br.com.jerrycoder.model.SettingsTemplate;
+import br.com.jerrycoder.model.bo.PingProxy;
+import br.com.jerrycoder.model.vo.SettingsTemplate;
 import com.google.common.collect.Lists;
-import br.com.jerrycoder.core.ConectionIMAP;
-import br.com.jerrycoder.core.ConectionSpliMail;
+import br.com.jerrycoder.model.bo.ConectionIMAP;
+import br.com.jerrycoder.model.bo.ConectionSpliMail;
 import java.applet.Applet;
 import java.awt.SystemColor;
 import java.io.BufferedReader;
@@ -36,8 +36,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.DefaultTableModel;
-import br.com.jerrycoder.model.DadosLogin;
-import br.com.jerrycoder.model.ResponseConection;
+import br.com.jerrycoder.model.vo.User;
+import br.com.jerrycoder.model.vo.ResponseConection;
 
 /**
  *
@@ -1831,7 +1831,7 @@ public class FrameSplitMail extends javax.swing.JInternalFrame {
                                                     //Verificar formato email
                                                     settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
 
-                                                    DadosLogin dadosLogin = new DadosLogin();
+                                                    User dadosLogin = new User();
                                                     dadosLogin.setUsername(arrayLinha[0]);
                                                     dadosLogin.setPass(arrayLinha[1]);
 

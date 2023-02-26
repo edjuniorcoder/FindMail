@@ -1,0 +1,1 @@
+istadi.srf@pamafert.com:123456:mail.pamafert.com:993:imap

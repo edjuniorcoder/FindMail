@@ -1,0 +1,6 @@
+t.brookman@hawaiiantel.net:poidog:imap.hawaiiantel.net:993:imap
+kauaibp@hawaiiantel.net:flanker01:imap.hawaiiantel.net:993:imap
+pamperme2@hawaiiantel.net:erinbc345:imap.hawaiiantel.net:993:imap
+hulali@hawaiiantel.net:sonnie51:imap.hawaiiantel.net:993:imap
+arzolek@hawaiiantel.net:takua1992:imap.hawaiiantel.net:993:imap
+bobandmo.bobandmo@hawaiiantel.net:bobandmo4736:imap.hawaiiantel.net:993:imap

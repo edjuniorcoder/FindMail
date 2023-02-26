@@ -4,9 +4,10 @@
  */
 package br.com.jerrycoder.view;
 
-import br.com.jerrycoder.Requests.PingProxy;
-import br.com.jerrycoder.model.SettingsTemplate;
-import br.com.jerrycoder.core.ConectionIMAP;
+import br.com.jerrycoder.controller.ControllerIMAP;
+import br.com.jerrycoder.model.bo.PingProxy;
+import br.com.jerrycoder.model.vo.SettingsTemplate;
+import br.com.jerrycoder.model.bo.ConectionIMAP;
 import java.applet.Applet;
 import java.awt.SystemColor;
 import java.io.BufferedReader;
@@ -34,8 +35,10 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.table.DefaultTableModel;
-import br.com.jerrycoder.model.DadosLogin;
-import br.com.jerrycoder.model.ResponseConection;
+import br.com.jerrycoder.model.vo.User;
+import br.com.jerrycoder.model.vo.ResponseConection;
+import br.com.jerrycoder.model.vo.Server;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -61,9 +64,16 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private int totalToCheck;
     private int totalTestado;
     private int salvarRetestar = 5;
+
+    private CopyOnWriteArrayList<String> listaConcorrente;
+    private CopyOnWriteArrayList<Server> listaServersType = new CopyOnWriteArrayList<>();
+
     private List<String> listaLogin = new ArrayList<String>();
     private List<String> listaProxy = new ArrayList<String>();
+    private List<String> listaServers = new ArrayList<>();
+
     private ExecutorService executor;
+
     private static final Object lockLive = new Object();
     private static final Object lockDie = new Object();
     private static final Object lockRetrie = new Object();
@@ -72,17 +82,22 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
     private DefaultTableModel valStatus;
     private DefaultTableModel valTableProxy;
+
     private Object o = new Object();
     private volatile boolean suspended = false;
+
     private Properties prop;
     private Properties configsProxy;
     private Properties configsValidacoes;
+    private Properties configsServers;
+
     private int validaPosProxy;
 
     DefaultTableModel valLive;
     DefaultTableModel valDie;
     DefaultTableModel valRetrie;
     DefaultTableModel valToCheck;
+    DefaultTableModel valTableServer;
 
     /**
      * Creates new form BurguerKing2
@@ -109,6 +124,14 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         valDie = (DefaultTableModel) tableDie.getModel();
         valRetrie = (DefaultTableModel) tableRetrie.getModel();
         valToCheck = (DefaultTableModel) tableToCheck.getModel();
+
+        titleForm = getTitle();
+        valTableServer = (DefaultTableModel) tableServers.getModel();
+
+        configsServers = new Properties();
+        setPropriedadesServers();
+
+        listaConcorrente = new CopyOnWriteArrayList<String>(listaServers);
 
     }
 
@@ -176,10 +199,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                     cbUseProxy.setSelected(Boolean.parseBoolean(configsProxy.getProperty("config.cbUseProxy")));
 
                     String[] arrayProxy = configsProxy.getProperty("config.proxy").split(";");
-                    System.out.println("arrayProxy size" + arrayProxy.length);
 
                     for (int i = 0; i < arrayProxy.length; i++) {
-                        System.out.println("arrayProxy: " + arrayProxy[i]);
                         String[] arrayLinha = arrayProxy[i].split(":");
 
                         if (arrayLinha.length == 4) {
@@ -256,6 +277,58 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
             String apiName = "./configs/configs.Validacoes" + titleForm;
             new FileWriter(apiName, true);
             InputStream input = new FileInputStream("./configs/configs.Validacoes" + titleForm);
+
+            // load a properties file
+            prop.load(input);
+
+        } catch (java.io.FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, ex);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex);
+        }
+
+        return prop;
+    }
+
+    private void setPropriedadesServers() {
+
+        configsServers = getPropriedadesServers();
+
+        new Thread(new Runnable() {
+
+            public void run() {
+
+                try {
+
+                    String[] arrayServer = configsServers.getProperty("config.server").split(";");
+
+                    for (int i = 0; i < arrayServer.length; i++) {
+                        String[] arrayLinha = arrayServer[i].split(":");
+
+                        valTableServer.addRow(new String[]{arrayLinha[0], arrayLinha[1], arrayLinha[2]});
+                        listaConcorrente.add(arrayLinha[0] + ":" + arrayLinha[1] + ":" + arrayLinha[2]);
+                        listaServersType.add(new Server(arrayLinha[0], arrayLinha[1], arrayLinha[2]));
+
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+
+                }
+
+            }
+        }).start();
+
+    }
+
+    public Properties getPropriedadesServers() {
+        Properties prop = new Properties();
+
+        try {
+
+            new File("./configs").mkdirs();
+            String apiName = "./configs/configs.Servers" + titleForm;
+            new FileWriter(apiName, true);
+            InputStream input = new FileInputStream("./configs/configs.Servers" + titleForm);
 
             // load a properties file
             prop.load(input);
@@ -433,6 +506,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         cbServer4 = new javax.swing.JCheckBox();
         cbMX = new javax.swing.JCheckBox();
         cbValidarEmail = new javax.swing.JCheckBox();
+        cbHistoryServers = new javax.swing.JCheckBox();
         jToolBar2 = new javax.swing.JToolBar();
         jButton7 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
@@ -449,6 +523,16 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         jButton6 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
         btSalvarProxy = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        jToolBar6 = new javax.swing.JToolBar();
+        jButton9 = new javax.swing.JButton();
+        jButton10 = new javax.swing.JButton();
+        jButton11 = new javax.swing.JButton();
+        jButton12 = new javax.swing.JButton();
+        btSalvarServers = new javax.swing.JButton();
+        jPanel7 = new javax.swing.JPanel();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        tableServers = new javax.swing.JTable();
         panelCaptcha = new javax.swing.JPanel();
         jToolBar3 = new javax.swing.JToolBar();
         cbCaptcha = new javax.swing.JCheckBox();
@@ -661,8 +745,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 2, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Die", jPanel1);
@@ -686,8 +770,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 290, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 244, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 3, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Retrie", jPanel3);
@@ -711,8 +795,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 282, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 2, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("ToCheck", jPanel4);
@@ -886,6 +970,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         cbValidarEmail.setSelected(true);
         cbValidarEmail.setText("valid formatt email");
 
+        cbHistoryServers.setText("save history servers");
+
         javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
@@ -896,7 +982,9 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                     .addGroup(jPanel12Layout.createSequentialGroup()
                         .addComponent(cbValidarEmail)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cbMX))
+                        .addComponent(cbMX)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbHistoryServers))
                     .addGroup(jPanel12Layout.createSequentialGroup()
                         .addGap(21, 21, 21)
                         .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -926,7 +1014,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                 .addContainerGap()
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cbValidarEmail)
-                    .addComponent(cbMX))
+                    .addComponent(cbMX)
+                    .addComponent(cbHistoryServers))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cbPorta1)
@@ -1150,6 +1239,125 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
         jTabbedPane2.addTab("Proxy Http", panelProxy);
 
+        jToolBar6.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jToolBar6.setRollover(true);
+
+        jButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-adicionar-24.png"))); // NOI18N
+        jButton9.setText("Add");
+        jButton9.setToolTipText("Adicionar Proxy");
+        jButton9.setFocusable(false);
+        jButton9.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton9.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+        jToolBar6.add(jButton9);
+
+        jButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-excluir-24.png"))); // NOI18N
+        jButton10.setText("Delete");
+        jButton10.setToolTipText("Deletar proxy selecionado");
+        jButton10.setFocusable(false);
+        jButton10.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton10.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton10ActionPerformed(evt);
+            }
+        });
+        jToolBar6.add(jButton10);
+
+        jButton11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-file-folder-24.png"))); // NOI18N
+        jButton11.setText("Import");
+        jButton11.setToolTipText("Importar a partir de arquivo");
+        jButton11.setFocusable(false);
+        jButton11.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton11.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton11ActionPerformed(evt);
+            }
+        });
+        jToolBar6.add(jButton11);
+
+        jButton12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-vassoura-24.png"))); // NOI18N
+        jButton12.setText("Clear");
+        jButton12.setToolTipText("Limpar lista");
+        jButton12.setFocusable(false);
+        jButton12.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton12.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton12ActionPerformed(evt);
+            }
+        });
+        jToolBar6.add(jButton12);
+
+        btSalvarServers.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-salvar-e-fechar-24.png"))); // NOI18N
+        btSalvarServers.setText("Save");
+        btSalvarServers.setFocusable(false);
+        btSalvarServers.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btSalvarServers.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btSalvarServers.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btSalvarServersActionPerformed(evt);
+            }
+        });
+        jToolBar6.add(btSalvarServers);
+
+        tableServers.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Dominio", "Server", "Port"
+            }
+        ));
+        jScrollPane6.setViewportView(tableServers);
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 839, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(50, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jToolBar6, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jToolBar6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(329, Short.MAX_VALUE))
+        );
+
+        jTabbedPane2.addTab("Register Servers", jPanel6);
+
         jToolBar3.setBorder(null);
         jToolBar3.setRollover(true);
 
@@ -1362,6 +1570,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                 // save properties to project root folder
                 prop.store(output, null);
 
+                JOptionPane.showMessageDialog(null, "Saved settings");
+
             }
 
         } catch (java.io.FileNotFoundException ex) {
@@ -1392,6 +1602,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
             // save properties to project root folder
             configsValidacoes.store(output, null);
+
+            JOptionPane.showMessageDialog(null, "Saved settings");
 
         } catch (java.io.FileNotFoundException ex) {
             JOptionPane.showMessageDialog(null, ex);
@@ -1571,6 +1783,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
             // save properties to project root folder
             configsProxy.store(output, null);
 
+            JOptionPane.showMessageDialog(null, "Saved settings");
+
         } catch (java.io.FileNotFoundException ex) {
             JOptionPane.showMessageDialog(null, ex);
         } catch (IOException ex) {
@@ -1671,10 +1885,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
         if (listaLogin.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Add List!");
-        } /*else if (txtIdCaptcha.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Configure a API 2Captcha atráves do menu Settings");
-
-        }*/ else {
+        } else {
             if (btStart.getText().equals("START")) {
 
                 btStart.setText("PAUSE");
@@ -1692,6 +1903,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                 jProgressBar.setMaximum(totalList);
 
                 for (int i = 0; i < totalThreads; i++) {
+
                     //Cria a rotina
                     int numThread = i;
                     valStatus.addRow(new String[]{String.valueOf(i + 1), null, null});
@@ -1701,114 +1913,181 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                         @Override
                         public void run() {
 
-                            while (!Thread.currentThread().isInterrupted()) {
+                            boolean retest = false;
+                            String linha = "";
 
-                                ResponseConection responseCon = new ResponseConection();
-                                SettingsTemplate settingsTemplate = new SettingsTemplate();
+                            while (!executor.isTerminated()) {
 
-                                if (listaLogin.size() >= 1) {
-                                    String linha = "";
+                                try {
 
-                                    if (responseCon.getCodResponse() != 2) {
-                                        synchronized (listaLogin) {
-                                            linha = listaLogin.get(0);
-                                            System.out.println("thread " + numThread + " " + linha);
-                                            listaLogin.remove(0);
+                                    ResponseConection responseCon = new ResponseConection();
+                                    SettingsTemplate settingsTemplate = new SettingsTemplate();
+
+                                    if (listaLogin.size() >= 1 || retest == true) {
+
+                                        if (retest == false) {
+
+                                            synchronized (listaLogin) {
+                                                linha = listaLogin.get(0);
+                                                listaLogin.remove(0);
+                                            }
                                         }
-                                    }
 
-                                    String[] arrayLinha = linha.split(":");
+                                        if (salvarRetestar == 0) {
+                                            //    System.out.println("linha: " + linha);
+                                            valStatus = (DefaultTableModel) tableStatus.getModel();
+                                            valStatus.setValueAt(linha, numThread, 1);
+                                            valStatus.setValueAt("Salvando linhas", numThread, 2);
 
-                                    //Set dados na table de dados sendo testados
-                                    valStatus.setValueAt(linha, numThread, 1);
-                                    valStatus.setValueAt("Start", numThread, 2);
-
-                                    settingsTemplate.setUseProxy(cbUseProxy.isSelected());
-
-                                    if (cbUseProxy.isSelected()) {
-                                        String proxyLinha = getProxy(validaPosProxy);
-                                        settingsTemplate.setValueProxyList(proxyLinha);
-                                    }
-
-                                    //Set configs ports
-                                    settingsTemplate.setPortEmail1(cbPorta1.isSelected());
-                                    settingsTemplate.setPortEmail2(cbPorta2.isSelected());
-                                    settingsTemplate.setPortEmail3(cbPorta3.isSelected());
-
-                                    //Set configs servers
-                                    settingsTemplate.setServerEmail2(cbServer1.isSelected());
-                                    settingsTemplate.setServerEmail3(cbServer2.isSelected());
-                                    settingsTemplate.setServerEmail1(cbServer3.isSelected());
-                                    settingsTemplate.setServerEmail4(cbServer4.isSelected());
-
-                                    //Set port and server do front-end
-                                    settingsTemplate.setPortText1(cbPorta1.getText());
-                                    settingsTemplate.setPortText2(cbPorta2.getText());
-                                    settingsTemplate.setPortText3(cbPorta3.getText());
-
-                                    //Altera nome host para o servidor do email
-                                    String server = arrayLinha[0].split("@")[1];
-                                    settingsTemplate.setServerText1(cbServer1.getText().replace("host", server));
-                                    settingsTemplate.setServerText2(cbServer2.getText().replace("host", server));
-                                    settingsTemplate.setServerText3(cbServer3.getText().replace("host", server));
-                                    settingsTemplate.setServerText4(cbServer4.getText().replace("host", server));
-
-                                    //Verificar servidores MX
-                                    settingsTemplate.setVerifyMx(cbMX.isSelected());
-
-                                    //Verificar formato email
-                                    settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
-
-                                    DadosLogin dadosLogin = new DadosLogin();
-                                    dadosLogin.setUsername(arrayLinha[0]);
-                                    dadosLogin.setPass(arrayLinha[1]);
-                                    dadosLogin.setProtocoloType("imap");
-
-                                    ConectionIMAP con = new ConectionIMAP();
-                                    responseCon = con.conectar(dadosLogin, settingsTemplate);
-
-                                    switch (responseCon.getCodResponse()) {
-                                        case 0:
-                        synchronized (lockLive) {
-                                                valLive.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), dadosLogin.getServer(), dadosLogin.getPort(), dadosLogin.getProtocoloType(), responseCon.getStatusResponse()});
+                                            synchronized (lockToCheck) {
+                                                atualizaToCheck(linha, "Retestar");
                                                 valStatus.setValueAt("Live", numThread, 2);
-                                                atualizaLives(dadosLogin.toString(), responseCon.getStatusResponse());
                                             }
-                                            break;
-                                        case 1:
+
+                                        } else {
+
+                                            if (!suspended) {
+
+                                                if (!linha.contains(":")) {
+                                                    //FORMATO INCORRETO
+                                                    synchronized (lockDie) {
+                                                        valDie.addRow(new String[]{linha, null, "Formato incorreto"});
+                                                        valStatus.setValueAt("Die", numThread, 2);
+                                                        atualizaDies(linha, "Formato incorreto");
+                                                    }
+                                                } else {
+
+                                                    String[] arrayLinha = linha.split(":");
+
+                                                    //Set dados na table de dados sendo testados
+                                                    valStatus.setValueAt(linha, numThread, 1);
+                                                    valStatus.setValueAt("Start", numThread, 2);
+
+                                                    settingsTemplate.setUseProxy(cbUseProxy.isSelected());
+
+                                                    if (cbUseProxy.isSelected()) {
+                                                        String proxyLinha = getProxy(validaPosProxy);
+                                                        System.out.println("proxyLinha: " + proxyLinha);
+                                                        settingsTemplate.setValueProxyList(proxyLinha);
+                                                        settingsTemplate.setUseProxyList(true);
+                                                    }
+
+                                                    //Set configs ports
+                                                    settingsTemplate.setPortEmail1(cbPorta1.isSelected());
+                                                    settingsTemplate.setPortEmail2(cbPorta2.isSelected());
+                                                    settingsTemplate.setPortEmail3(cbPorta3.isSelected());
+
+                                                    //Set configs servers
+                                                    settingsTemplate.setServerEmail2(cbServer1.isSelected());
+                                                    settingsTemplate.setServerEmail3(cbServer2.isSelected());
+                                                    settingsTemplate.setServerEmail1(cbServer3.isSelected());
+                                                    settingsTemplate.setServerEmail4(cbServer4.isSelected());
+
+                                                    //Set port and server do front-end
+                                                    settingsTemplate.setPortText1(cbPorta1.getText());
+                                                    settingsTemplate.setPortText2(cbPorta2.getText());
+                                                    settingsTemplate.setPortText3(cbPorta3.getText());
+
+                                                    //Altera nome host para o servidor do email
+                                                    String server = arrayLinha[0].split("@")[1];
+                                                    settingsTemplate.setServerText1(cbServer1.getText().replace("host", server));
+                                                    settingsTemplate.setServerText2(cbServer2.getText().replace("host", server));
+                                                    settingsTemplate.setServerText3(cbServer3.getText().replace("host", server));
+                                                    settingsTemplate.setServerText4(cbServer4.getText().replace("host", server));
+
+                                                    //Verificar servidores MX
+                                                    settingsTemplate.setVerifyMx(cbMX.isSelected());
+
+                                                    //Verificar formato email
+                                                    settingsTemplate.setVerifyFormattEmail(cbValidarEmail.isSelected());
+
+                                                    //Verificar save servers
+                                                    settingsTemplate.setVerifySaveServers(cbHistoryServers.isSelected());
+
+                                                    User user = new User();
+                                                    user.setUsername(arrayLinha[0]);
+                                                    user.setPass(arrayLinha[1]);
+                                                    user.setDominio(arrayLinha[0].split("@")[1]);
+                                                    user.setProtocoloType("imap");
+
+                                                    System.out.println("user: " + user);
+
+                                                    ControllerIMAP controllerIMAP = new ControllerIMAP(settingsTemplate, user, FrameIMAP.this);
+                                                    responseCon = controllerIMAP.login();
+
+                                                    switch (responseCon.getCodResponse()) {
+                                                        case 0:
+                        synchronized (lockLive) {
+                                                                retest = false;
+                                                                valLive.addRow(new String[]{user.getUsername(), user.getPass(), user.getServer(), user.getPort(), user.getProtocoloType(), responseCon.getStatusResponse()});
+                                                                valStatus.setValueAt("Live", numThread, 2);
+                                                                atualizaLives(user.toString(), responseCon.getStatusResponse());
+
+                                                                if (!listaConcorrente.contains(user.getDominio() + ":" + user.getServer() + ":" + user.getPort())) {
+                                                                    valTableServer.addRow(new String[]{user.getDominio(), user.getServer(), user.getPort()});
+                                                                    btSalvarServersActionPerformed(null);
+                                                                }
+
+                                                            }
+                                                            break;
+                                                        case 1:
                         synchronized (lockDie) {
-                                                valDie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("Die", numThread, 2);
-                                                atualizaDies(dadosLogin.toString(), responseCon.getStatusResponse());
-                                            }
-                                            break;
-                                        case 2:
+                                                                retest = false;
+                                                                valDie.addRow(new String[]{user.getUsername(), user.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                                valStatus.setValueAt("Die", numThread, 2);
+                                                                atualizaDies(user.toString(), responseCon.getStatusResponse());
+                                                            }
+                                                            break;
+                                                        case 2:
                         synchronized (lockRetrie) {
-                                                valRetrie.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("Retrie", numThread, 2);
-                                                atualizaRetries();
-                                            }
+                                                                retest = true;
+                                                                valRetrie.addRow(new String[]{user.getUsername(), user.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                                valStatus.setValueAt("Retrie", numThread, 2);
+                                                                atualizaRetries();
+                                                            }
 
-                                            break;
-                                        case 3:
+                                                            break;
+                                                        case 3:
                         synchronized (lockToCheck) {
-                                                valToCheck.addRow(new String[]{dadosLogin.getUsername(), dadosLogin.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
-                                                valStatus.setValueAt("ToCheck", numThread, 2);
-                                                atualizaToCheck(dadosLogin.toString(), responseCon.getStatusResponse());
+                                                                retest = false;
+                                                                valToCheck.addRow(new String[]{user.getUsername(), user.getPass(), settingsTemplate.getValueProxyList(), responseCon.getStatusResponse()});
+                                                                valStatus.setValueAt("ToCheck", numThread, 2);
+                                                                atualizaToCheck(user.toString(), responseCon.getStatusResponse());
+                                                            }
+
+                                                            break;
+
+                                                    }
+
+                                                    validaPosProxy++;
+
+                                                }
+
+                                            } else {
+                                                try {
+                                                    valStatus.setValueAt("Paused", numThread, 2);
+                                                    while (suspended) {
+
+                                                        synchronized (o) {
+                                                            o.wait();
+                                                        }
+                                                    }
+                                                } catch (InterruptedException e) {
+                                                }
                                             }
 
-                                            break;
+                                        }
+
+                                    } else {
+                                        Thread.currentThread().interrupt();
+                                        valStatus.setValueAt("", numThread, 1);
+                                        valStatus.setValueAt("Finish", numThread, 2);
+                                        break;
 
                                     }
 
-                                    validaPosProxy++;
-
-                                } else {
-                                    Thread.currentThread().interrupt();
-                                    valStatus.setValueAt("", numThread, 1);
-                                    valStatus.setValueAt("Finish", numThread, 2);
-                                    break;
-
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
                                 }
 
                             }
@@ -1818,10 +2097,25 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
                 }
 
-                executor.shutdown();
+                new Thread(new Runnable() {
 
-                //Aguarda finalizar para resetar botões
-                checkStatusBoots();
+                    public void run() {
+                        while (true) {
+                            //   System.out.println(executor.isTerminated());
+                            if (listaLogin.size() == 0) {
+                                executor.shutdown();
+
+                                //Aguarda finalizar para resetar botões
+                                checkStatusBoots();
+                                break;
+                            }
+
+                        }
+
+                        System.out.println("finish");
+
+                    }
+                }).start();
 
             } else if (btStart.getText().equals("PAUSE")) {
                 btStart.setText("RESUME");
@@ -1838,6 +2132,47 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
         }
     }//GEN-LAST:event_btStartActionPerformed
+
+    public void changeTableStatus(String user, String str) {
+
+        for (int i = 0; i < valStatus.getRowCount(); i++) {
+            String value = valStatus.getValueAt(i, 1).toString();
+            System.out.println("pos: " + i + ": value: " + value + " user: " + user);
+
+            if (value.contains(":")) {
+                try {
+                    String[] arrayValue = value.split(":");
+                    String userPass = arrayValue[0] + ":" + arrayValue[1];
+
+                    if (userPass.equals(user)) {
+                        valStatus.setValueAt(str, i, 2);
+                        break;
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+        }
+
+    }
+
+    public Server listaServersTypeContains(String str) {
+        for (Server listaServer : listaServersType) {
+            if (listaServer.getDominio().equalsIgnoreCase(str)) {
+                return listaServer;
+            }
+        }
+        return null;
+    }
+
+    public boolean listaConcorrenteContains(String str) {
+        return listaConcorrente.contains(str);
+    }
+
+    public boolean listaConcorrenteUndexOf(String str) {
+        return listaConcorrente.contains(str);
+    }
 
     private String getProxy(int posLista) {
         String retorno = "";
@@ -1970,18 +2305,159 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         txtPortCaptcha.setText(null);
     }//GEN-LAST:event_jButton8ActionPerformed
 
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        // TODO add your handling code here:
+        valTableServer.addRow(new String[]{});
+    }//GEN-LAST:event_jButton9ActionPerformed
+
+    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+        // TODO add your handling code here:
+
+        if (tableServers.getSelectedRow() < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione a linha a ser excluída!");
+        } else if (tableServers.getSelectedRow() >= 0) {
+            valTableServer.removeRow(tableServers.getSelectedRow());
+        }
+    }//GEN-LAST:event_jButton10ActionPerformed
+
+    private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
+        // TODO add your handling code here:
+
+        new Thread(new Runnable() {
+
+            public void run() {
+
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Adicionar lista");
+                //fileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
+                fileChooser.setCurrentDirectory(new java.io.File("."));
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("texto", "txt");
+                fileChooser.setFileFilter(filter);
+
+                Applet applet = new Applet(); //Cria um novo view para o chooser
+
+                int retorno = fileChooser.showOpenDialog(applet);
+
+                // 0 para endereço selecionado, 1 quando fecha sem selecionar nada
+                if (retorno == 0) {
+                    File file = fileChooser.getSelectedFile();
+
+                    try {
+                        BufferedReader in = new BufferedReader(new FileReader(file));
+
+                        while (in.ready()) {
+                            String dados = in.readLine();
+
+                            if (dados.contains(":")) {
+                                String[] arrayLinha = dados.split(":");
+
+                                if (arrayLinha.length == 4) {
+                                    valTableServer.addRow(new String[]{arrayLinha[0], arrayLinha[1], arrayLinha[2], arrayLinha[3]});
+                                } else if (arrayLinha.length == 4) {
+                                    valTableServer.addRow(new String[]{arrayLinha[0], arrayLinha[1], arrayLinha[2], arrayLinha[3]});
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Padrão incorreto. Considere adicionar lista nos formatos abaixo: \n\n"
+                                            + "host;port;user;pass \n"
+                                            + "host;port");
+                                }
+
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Padrão incorreto. Considere adicionar lista nos formatos abaixo: \n\n"
+                                        + "host:port:user:pass \n"
+                                        + "host:port");
+                            }
+
+                        }
+                        in.close();
+
+                    } catch (FileNotFoundException ex) {
+                        JOptionPane.showMessageDialog(null, "Adicione a lista a ser Testada");
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, ex);
+
+                    }
+
+                }
+
+            }
+        }).start();
+    }//GEN-LAST:event_jButton11ActionPerformed
+
+    private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
+        // TODO add your handling code here:
+        ((DefaultTableModel) tableServers.getModel()).setNumRows(0);
+    }//GEN-LAST:event_jButton12ActionPerformed
+
+    private void btSalvarServersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btSalvarServersActionPerformed
+        // TODO add your handling code here:
+
+        StringBuilder strBuilder = new StringBuilder();
+
+        for (int i = 0; i < tableServers.getRowCount(); i++) {
+
+            String dominio = "";
+            String host = "";
+            String port = "";
+
+            try {
+                dominio = tableServers.getValueAt(i, 0).toString();
+
+                host = tableServers.getValueAt(i, 1).toString();
+
+                port = tableServers.getValueAt(i, 2).toString();
+
+                if (!dominio.isEmpty() && !host.isEmpty() && !port.isEmpty()) {
+                    listaConcorrente.add(dominio + ":" + host + ":" + port);
+                    listaServersType.add(new Server(dominio, host, port));
+                    strBuilder.append(dominio + ":" + host + ":" + port + ";");
+
+                    OutputStream output = new FileOutputStream("./configs/configs.Servers" + titleForm);
+
+                    configsServers.setProperty("config.server", strBuilder.toString());
+
+                    // save properties to project root folder
+                    configsServers.store(output, null);
+
+                    if (evt != null) {
+                        JOptionPane.showMessageDialog(null, "Saved settings");
+                    }
+
+                } else {
+                    JOptionPane.showMessageDialog(this, "Server or Port empty");
+                }
+
+            } catch (java.io.FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "value server or port empty");
+            }
+
+        }
+
+
+    }//GEN-LAST:event_btSalvarServersActionPerformed
+
+    public void incrementListServer(String str) {
+        listaConcorrente.add(str);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btAddList;
     private javax.swing.JButton btSaldo2Captcha;
     private javax.swing.JButton btSalvarCaptcha;
     private javax.swing.JButton btSalvarProxy;
+    private javax.swing.JButton btSalvarServers;
     private javax.swing.JButton btSettingsMail;
     private javax.swing.JButton btStart;
     private javax.swing.JButton btStop;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JComboBox<String> cbCapcha;
     private javax.swing.JCheckBox cbCaptcha;
+    private javax.swing.JCheckBox cbHistoryServers;
     private javax.swing.JCheckBox cbMX;
     private javax.swing.JCheckBox cbPorta1;
     private javax.swing.JCheckBox cbPorta2;
@@ -1995,6 +2471,9 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JPanel jBody;
     private javax.swing.JSlider jBots;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton10;
+    private javax.swing.JButton jButton11;
+    private javax.swing.JButton jButton12;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
@@ -2002,6 +2481,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JButton jButton9;
     private javax.swing.JPanel jFooter;
     private javax.swing.JTabbedPane jGuiasPrincipal;
     private javax.swing.JPanel jHeader;
@@ -2023,6 +2503,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JLabel jProgress;
     private javax.swing.JProgressBar jProgressBar;
     private javax.swing.JScrollPane jScrollPane1;
@@ -2030,6 +2512,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JPanel jSetting;
     private javax.swing.JTabbedPane jTabbedPane1;
@@ -2042,6 +2525,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JToolBar jToolBar3;
     private javax.swing.JToolBar jToolBar4;
     private javax.swing.JToolBar jToolBar5;
+    private javax.swing.JToolBar jToolBar6;
     private javax.swing.JToolBar jToolBar8;
     private javax.swing.JToolBar jToolBar9;
     private javax.swing.JLabel lbPort;
@@ -2053,6 +2537,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
     private javax.swing.JTable tableLive;
     private javax.swing.JTable tableProxy;
     private javax.swing.JTable tableRetrie;
+    private javax.swing.JTable tableServers;
     private javax.swing.JTable tableStatus;
     private javax.swing.JTable tableToCheck;
     private javax.swing.JLabel txtBots;

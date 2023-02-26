@@ -1,0 +1,2 @@
+dizi1@a1.net:passat007:imap.a1.net:993:imap
+ortwin.kulstrunk@a1.net:Lennart2908:imap.a1.net:993:imap

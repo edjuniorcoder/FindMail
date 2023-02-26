@@ -1,5 +1,11 @@
 
+import br.com.jerrycoder.model.vo.MailSession;
+import br.com.jerrycoder.model.vo.Server;
+import br.com.jerrycoder.model.vo.User;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import javax.mail.Authenticator;
 import javax.mail.MessagingException;
@@ -7,6 +13,9 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
@@ -39,61 +48,20 @@ public class FindMail {
 
     public static void main(String[] args) throws NoSuchProviderException, MessagingException, IOException {
 
-        String host = "proxy.packetstream.io";
-        String port = "31112";
-        String user = "jerry171";
-        String pass = "33bkwcR8ZPhcNqSx";
+        String str = "jerry@terra.com.br";
+        List<Server> listaServers = new ArrayList<>();
+        listaServers.add(new Server("terra.com.br", "imap.terra.com.br", "993"));
 
-        HttpHost proxyHost = new HttpHost(host, Integer.parseInt(port));
+        Server server = null;
+        for (Server listaServer : listaServers) {
+            if (listaServer.getDominio().equals(str.split("@")[1])) {
+                System.out.println("contém;");
+                server = listaServer;
+                break;
+            }
+        }
 
-        // Cria as credencias da API
-        CredentialsProvider credentialsPovider = new BasicCredentialsProvider();
-        credentialsPovider.setCredentials(new org.apache.http.auth.AuthScope(host, Integer.parseInt(port)), new org.apache.http.auth.UsernamePasswordCredentials(user, pass));
+        System.out.println("server: " + server);
 
-        //Creating the HttpClientBuilder
-        HttpClientBuilder clientbuilder = HttpClients.custom();
-        clientbuilder = clientbuilder.setDefaultCredentialsProvider(credentialsPovider);
-
-        CookieStore httpCookieStore = new BasicCookieStore();
-        CloseableHttpClient httpClient = clientbuilder.setDefaultCookieStore(httpCookieStore).setRedirectStrategy(new LaxRedirectStrategy()).build();
-
-        //Setting the proxy
-        RequestConfig.Builder reqconfigconbuilder = RequestConfig.custom();
-        reqconfigconbuilder = reqconfigconbuilder.setProxy(proxyHost);
-
-        RequestConfig config = reqconfigconbuilder.setConnectionRequestTimeout(10000).setConnectTimeout(10000).setSocketTimeout(10000).build();
-
-        //HttpGet requestGet = new HttpGet("https://meuip.com.br/");
-        HttpGet requestGet = new HttpGet("https://ipapi.co/json/");
-        requestGet.setHeader("Host", "ipapi.co");
-        requestGet.setHeader("Cookie", "csrftoken=tAjwAuenwJyK0NvjMZ9IRPON7tnhGf5jJTgXenbkYGMA5RNtyh5m1nCmqcCgt89X");
-        requestGet.setHeader("sec-ch-ua", "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\"");
-        requestGet.setHeader("sec-ch-ua-mobile", "?0");
-        requestGet.setHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
-        requestGet.setHeader("sec-ch-ua-platform", "\"Windows\"");
-        requestGet.setHeader("accept", "*/*");
-        requestGet.setHeader("sec-fetch-site", "same-origin");
-        requestGet.setHeader("sec-fetch-mode", "cors");
-        requestGet.setHeader("sec-fetch-dest", "empty");
-        requestGet.setHeader("referer", "https://ipapi.co/");
-        requestGet.setHeader("accept-language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7");
-        requestGet.setConfig(config);
-
-        HttpContext localContext = new BasicHttpContext();
-        localContext.setAttribute(HttpClientContext.COOKIE_STORE, httpCookieStore);
-
-        long startTime = System.currentTimeMillis();
-        //  CloseableHttpResponse response = httpClient.execute( requestGet);
-        CloseableHttpResponse response = httpClient.execute(proxyHost, requestGet);
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        System.out.println("Elapsed time: " + elapsedTime + " ms");
-
-        HttpEntity entityGet = response.getEntity();
-
-        Document getHTML = Jsoup.parse(EntityUtils.toString(entityGet));
-
-        String htmlGet = getHTML.body().text();
-
-        System.out.println("htmlGet: " + htmlGet);
     }
 }

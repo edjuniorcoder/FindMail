@@ -1,0 +1,1 @@
+reservation@mahadevhotel.com:reservation@123:mail.mahadevhotel.com:993:imap
