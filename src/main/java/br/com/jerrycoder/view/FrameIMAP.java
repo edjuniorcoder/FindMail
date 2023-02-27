@@ -38,7 +38,15 @@ import javax.swing.table.DefaultTableModel;
 import br.com.jerrycoder.model.vo.User;
 import br.com.jerrycoder.model.vo.ResponseConection;
 import br.com.jerrycoder.model.vo.Server;
+import java.awt.BorderLayout;
+import java.awt.Container;
 import java.util.concurrent.CopyOnWriteArrayList;
+import javax.swing.BorderFactory;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JProgressBar;
+import javax.swing.WindowConstants;
+import javax.swing.border.Border;
 
 /**
  *
@@ -200,6 +208,14 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
                     String[] arrayProxy = configsProxy.getProperty("config.proxy").split(";");
 
+                    //Progress Bar
+                    JFrame frame = new JFrame("Loading Configs Proxy");
+                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    Container content = frame.getContentPane();
+                    JProgressBar progressBar = new JProgressBar(0, arrayProxy.length);
+                    // Centralizar o JFrame na tela
+                    frame.setLocationRelativeTo(null);
+
                     for (int i = 0; i < arrayProxy.length; i++) {
                         String[] arrayLinha = arrayProxy[i].split(":");
 
@@ -213,7 +229,18 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                             listaProxy.add(arrayLinha[0] + ":" + arrayLinha[1]);
                         }
 
+                        //Modificando Progress Bar
+                        progressBar.setValue(i);
+                        progressBar.setStringPainted(true);
+                        Border border = BorderFactory.createTitledBorder("Reading...");
+                        progressBar.setBorder(border);
+                        content.add(progressBar, BorderLayout.NORTH);
+                        frame.setSize(300, 100);
+                        frame.setVisible(true);
+
                     }
+
+                    frame.setVisible(false);
                 } catch (Exception ex) {
 
                 }
@@ -302,6 +329,15 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
                     String[] arrayServer = configsServers.getProperty("config.server").split(";");
 
+                    //Progress Bar
+                    JFrame frame = new JFrame("Loading Configs Servers");
+                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    Container content = frame.getContentPane();
+                    JProgressBar progressBar = new JProgressBar(0, arrayServer.length);
+
+                    // Centralizar o JFrame na tela
+                    frame.setLocationRelativeTo(null);
+
                     for (int i = 0; i < arrayServer.length; i++) {
                         String[] arrayLinha = arrayServer[i].split(":");
 
@@ -309,7 +345,18 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                         listaConcorrente.add(arrayLinha[0] + ":" + arrayLinha[1] + ":" + arrayLinha[2]);
                         listaServersType.add(new Server(arrayLinha[0], arrayLinha[1], arrayLinha[2]));
 
+                        //Modificando Progress Bar
+                        progressBar.setValue(i);
+                        progressBar.setStringPainted(true);
+                        Border border = BorderFactory.createTitledBorder("Reading...");
+                        progressBar.setBorder(border);
+                        content.add(progressBar, BorderLayout.NORTH);
+                        frame.setSize(300, 100);
+                        frame.setVisible(true);
+
                     }
+
+                    frame.setVisible(false);
                 } catch (Exception ex) {
                     ex.printStackTrace();
 
@@ -340,6 +387,23 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
         }
 
         return prop;
+    }
+
+    public void frameProgressBar(String title, int maxProgress, int valueCurrent) {
+
+        JFrame frame = new JFrame(title);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        Container content = frame.getContentPane();
+        JProgressBar progressBar = new JProgressBar(0, maxProgress);
+
+        progressBar.setValue(valueCurrent);
+        progressBar.setStringPainted(true);
+        Border border = BorderFactory.createTitledBorder("Reading...");
+        progressBar.setBorder(border);
+        content.add(progressBar, BorderLayout.NORTH);
+        frame.setSize(300, 100);
+        frame.setVisible(true);
+
     }
 
     public void suspend() {

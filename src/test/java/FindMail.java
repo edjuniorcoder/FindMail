@@ -2,6 +2,8 @@
 import br.com.jerrycoder.model.vo.MailSession;
 import br.com.jerrycoder.model.vo.Server;
 import br.com.jerrycoder.model.vo.User;
+import java.awt.BorderLayout;
+import java.awt.Container;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -16,6 +18,14 @@ import javax.mail.Store;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.swing.BorderFactory;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
+import javax.swing.WindowConstants;
+import javax.swing.border.Border;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
@@ -46,8 +56,9 @@ import org.jsoup.nodes.Document;
  */
 public class FindMail {
 
-    public static void main(String[] args) throws NoSuchProviderException, MessagingException, IOException {
+    public static void main(String[] args) throws NoSuchProviderException, MessagingException, IOException, InterruptedException {
 
+        /*
         String str = "jerry@terra.com.br";
         List<Server> listaServers = new ArrayList<>();
         listaServers.add(new Server("terra.com.br", "imap.terra.com.br", "993"));
@@ -62,6 +73,27 @@ public class FindMail {
         }
 
         System.out.println("server: " + server);
-
+        
+         */
+        JFrame f = new JFrame("JProgressBar Sample");
+        // Centralizar o JFrame na tela
+f.setLocationRelativeTo(null);
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		Container content = f.getContentPane();
+		JProgressBar progressBar = new JProgressBar();
+		JLabel label = new JLabel();
+                
+		for (int i = 0; i < 100; i++) {
+			label.setText("cadastrando "+i);
+			progressBar.setValue(i);
+			progressBar.setStringPainted(true);
+			Thread.sleep(1000);
+			Border border = BorderFactory.createTitledBorder("Reading...");
+			progressBar.setBorder(border);
+			content.add(progressBar, BorderLayout.NORTH);
+			content.add(label,BorderLayout.SOUTH);
+			f.setSize(300, 100);
+			f.setVisible(true);
+		}
     }
 }
