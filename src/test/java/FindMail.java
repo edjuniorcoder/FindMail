@@ -4,7 +4,10 @@ import br.com.jerrycoder.model.vo.Server;
 import br.com.jerrycoder.model.vo.User;
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +61,10 @@ public class FindMail {
 
     public static void main(String[] args) throws NoSuchProviderException, MessagingException, IOException, InterruptedException {
 
+        String minhaString = "User{username=10, texto=pass}";
+        User minhaClasse = User.class.cast(minhaString);
+        System.out.println(minhaClasse.toString());
+
         /*
         String str = "jerry@terra.com.br";
         List<Server> listaServers = new ArrayList<>();
@@ -74,7 +81,7 @@ public class FindMail {
 
         System.out.println("server: " + server);
         
-         */
+         */ /*
         JFrame f = new JFrame("JProgressBar Sample");
         // Centralizar o JFrame na tela
 f.setLocationRelativeTo(null);
@@ -95,5 +102,7 @@ f.setLocationRelativeTo(null);
 			f.setSize(300, 100);
 			f.setVisible(true);
 		}
+                
+         */
     }
 }

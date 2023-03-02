@@ -192,7 +192,7 @@
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/images/icons8-ler-mensagem-24.png"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Checker IMAP"/>
+            <Property name="text" type="java.lang.String" value="IMAP"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -206,7 +206,7 @@
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/images/icons8-enviar-e-mail-24.png"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Checker SMTP"/>
+            <Property name="text" type="java.lang.String" value="SMTP"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>
@@ -234,7 +234,7 @@
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/images/icons8-partilhar-24.png"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Checker MX"/>
+            <Property name="text" type="java.lang.String" value="MX"/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>

@@ -4,17 +4,18 @@
  */
 package br.com.jerrycoder.model.vo;
 
+import java.io.Serializable;
+
 /**
  *
  * @author jerry
  */
-public class User extends Server {
+public class User extends Server implements Serializable {
 
     private String username;
     private String pass;
 
-    public User() {
-    }
+
 
     public User(String username, String pass) {
         this.username = username;
@@ -25,6 +26,9 @@ public class User extends Server {
         super(server, port, protocoloType);
         this.username = username;
         this.pass = pass;
+    }
+    
+        public User() {
     }
 
     public String getUsername() {
@@ -45,8 +49,10 @@ public class User extends Server {
 
     @Override
     public String toString() {
-        return "User{" + "username=" + username + ", pass=" + pass + ", server=" + this.getServer() + ", port="+this.getPort() + '}';
+        return username + ":" + pass + ":" + this.getServer() + ":" + this.getPort();
     }
+
+    
 
 
     

@@ -1,5 +1,0 @@
-User{username=betemonica@ig.com.br, pass=230561, server=webmail.ig.com.br, port=443}
-User{username=emerson_pedroso@ig.com.br, pass=230774, server=webmail.ig.com.br, port=443}
-User{username=angela.franco@ig.com.br, pass=091975, server=webmail.ig.com.br, port=443}
-User{username=financeiro@zionrotulos.com.br, pass=n0a1t256, server=mail.zionrotulos.com.br, port=143}
-User{username=pamperme2@hawaiiantel.net, pass=erinbc345, server=imap.hawaiiantel.net, port=143}

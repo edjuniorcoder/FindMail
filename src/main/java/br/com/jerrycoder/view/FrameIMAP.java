@@ -1864,6 +1864,8 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
 
             public void run() {
 
+                
+
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setDialogTitle("Adicionar lista");
                 //fileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
@@ -1880,6 +1882,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                 // 0 para endereço selecionado, 1 quando fecha sem selecionar nada
                 if (retorno == 0) {
                     File file = fileChooser.getSelectedFile();
+                    
 
                     try {
                         BufferedReader in = new BufferedReader(new FileReader(file));
@@ -1887,9 +1890,7 @@ public class FrameIMAP extends javax.swing.JInternalFrame {
                         while (in.ready()) {
                             String dados = in.readLine();
 
-                            if (dados.contains(":")) {
-                                listaLogin.add(new String(dados));
-                            }
+                            listaLogin.add(new String(dados));
 
                         }
                         in.close();

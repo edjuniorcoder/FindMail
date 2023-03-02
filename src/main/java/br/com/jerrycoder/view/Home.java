@@ -103,7 +103,7 @@ public class Home extends javax.swing.JFrame {
         jToolBar1.setRollover(true);
 
         jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-ler-mensagem-24.png"))); // NOI18N
-        jButton3.setText("Checker IMAP");
+        jButton3.setText("IMAP");
         jButton3.setFocusable(false);
         jButton3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton3.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -115,7 +115,7 @@ public class Home extends javax.swing.JFrame {
         jToolBar1.add(jButton3);
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-enviar-e-mail-24.png"))); // NOI18N
-        jButton2.setText("Checker SMTP");
+        jButton2.setText("SMTP");
         jButton2.setFocusable(false);
         jButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -139,7 +139,7 @@ public class Home extends javax.swing.JFrame {
         jToolBar1.add(jButton4);
 
         jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/icons8-partilhar-24.png"))); // NOI18N
-        jButton1.setText("Checker MX");
+        jButton1.setText("MX");
         jButton1.setFocusable(false);
         jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
